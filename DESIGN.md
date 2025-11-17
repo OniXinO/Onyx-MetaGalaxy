@@ -8,7 +8,7 @@
 ## Обсяг першого тестового релізу 0.0.1
 - База: Stock + OPM (Outer Planets Mod) через OMG-обгортку.
 - Документація: README, DESIGN Doc, CHANGELOG, OMG.version оновлено на 0.0.1.
-- Профілі: додано два базові рівні продуктивності (Productivity, Balance) для OPM-only.
+- Профілі: додано чотири рівні продуктивності для OPM-only — Productivity, Balance, Quality, Ultra.
 - Інфраструктура: авто-очищення легасі-маркерів, фільтрація ConfigNode для відключених паків, безпечний режим логування.
 
 ## Ключові Принципи
@@ -30,8 +30,8 @@
   - Окремі файли з умовами `:NEEDS[Pack,OMG_Enable_Pack] :AFTER[...]` для мостів між паками і графічними/ґеймплейними модами.
 
 ## Профілі Продуктивності
-- Рівні: Productivity (Low), Balance (Medium), Quality (High), SuperQuality (Ultra).
-- На етапі 0.0.1 реалізовано: Productivity і Balance для OPM-only.
+- Рівні: Productivity (Low), Balance (Medium), Quality (High), Ultra (Max).
+- На етапі 0.0.1 реалізовано для OPM-only: Productivity, Balance, Quality, Ultra.
 - Дизайн-підхід:
   - Профіль визначає набір паків.
   - Рекомендації щодо графічних модів/налаштувань надано в README (плагін не змінює графіку напряму у цьому релізі).
@@ -63,7 +63,7 @@
 - README: оновлення налаштувань, профілів, інструкцій.
 
 ## Roadmap (узагальнено)
-- Додати профілі Quality і SuperQuality.
+- Розширити профілі на інші комбінації паків (GU/BH/KSRSS/GPP) із рівнями якості.
 - Каталог мостів сумісності: OPM ↔ GU/BH/KSRSS/GPP; інтеграції зі `scatterer`/`EVE`/`Parallax`, рескейл (KSRSS/SigmaDimensions), геймплей (Kerbalism, ResearchBodies).
 - Параметр `performanceLevel` у налаштуваннях + модульні графічні патчі.
 - API для розширень (гайд і приклади) для сторонніх авторів.
