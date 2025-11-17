@@ -6,6 +6,7 @@
 - `GameData/OniXinO/OMG/OMGSettings.cfg` — вибір активного профілю.
 - `GameData/OniXinO/OMG/Profiles/*.cfg` — профілі зі списком `Pack { id; enabled }`.
 - Маркери: `GameData/OniXinO/OMG_Enable_<PackId>` — створюються скриптом.
+ - Фільтрація: увімкнення/поведінка контролюється налаштуваннями у `OMGSettings.cfg`.
 
 Залежності:
 - Встановлені планетпаки у `GameData` (наприклад `OuterPlanetsMod`, `JNSQ` тощо).
@@ -15,7 +16,10 @@
 1. Встановіть потрібні планетпаки у `GameData`.
 2. Відредагуйте `Profiles/default.cfg`, увімкніть/вимкніть `enabled`.
 3. За потреби змініть активний профіль у `OMGSettings.cfg` (`activeProfile = default`).
-4. Увімкнути/вимкнути строгий режим маркерів: `strictMarkers = true|false`.
+4. Налаштування у `OMGSettings.cfg`:
+   - `strictMarkers = true|false` — не створювати маркери для відсутніх паків у `GameData` (true рекомендовано).
+   - `filterDisabledPacks = true|false` — фільтрувати `ConfigNode` для вимкнених паків (вимкнено за замовчуванням).
+   - `filterSafeMode = true|false` — безпечний режим фільтрації: лише логування кандидатів (true рекомендовано спочатку).
 4. Запустіть `tools/ActivateProfile.ps1` (опційно `-ActiveProfile <name>`).
 5. Скрипт створить/прибере маркери `GameData/OniXinO/OMG_Enable_<id>`, їх можна перевірити у файловій системі.
 6. Запускайте KSP.
@@ -35,3 +39,10 @@
 - Деякі пакети конфліктують, тестуйте комбінації.
 - Скрипт не видаляє чужі файли, лише керує маркерами.
  - У строгому режимі маркери НЕ створюються, якщо папка паку відсутня у `GameData`.
+ - Якщо `filterDisabledPacks = true` і `filterSafeMode = false`, плагін буде прибирати `ConfigNode` завантажені з файлів вимкнених паків.
+ - Перед вимкненням безпечного режиму перегляньте логи `[OMG]` у KSP для підтвердження кандидатів.
+
+Версіювання:
+- Файл `GameData/OniXinO/OMG/OMG.version` (KSP-AVC) містить версію і посилання на релізи.
+- Оновлення: BUILD збільшується при змінах функціональності/документації; великі зміни — PATCH/MINOR/MAJOR.
+- Див. `CHANGELOG.md` для списку змін.

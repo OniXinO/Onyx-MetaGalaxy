@@ -4,6 +4,26 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
+function Cleanup-LegacyMarkers {
+    param([string]$gameData)
+    try {
+        $legacyDirs = Get-ChildItem -LiteralPath $gameData -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like 'OMG_Enable_*' }
+        foreach ($dir in $legacyDirs) {
+            try {
+                Remove-Item -Recurse -Force -LiteralPath $dir.FullName
+                Write-Host "Removed legacy marker: $($dir.FullName)" -ForegroundColor Yellow
+            } catch {
+                Write-Host "Failed to remove legacy marker: $($dir.FullName): $_" -ForegroundColor Red
+            }
+        }
+        if ($legacyDirs.Count -gt 0) {
+            Write-Host "Legacy marker cleanup complete." -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "Legacy marker cleanup error: $_" -ForegroundColor Red
+    }
+}
+
 function Get-ActiveProfileName {
     param([string]$settingsPath)
     if (-not (Test-Path $settingsPath)) { return 'default' }
@@ -51,6 +71,9 @@ if (-not (Test-Path $profilePath)) {
 }
 
 Write-Host "Activating profile: $ActiveProfile" -ForegroundColor Cyan
+
+# Авто-очищення всіх легасі-маркерів у корені GameData перед активацією
+Cleanup-LegacyMarkers -gameData $gameData
 
 # Parse Packs from profile .cfg
 $packs = @()

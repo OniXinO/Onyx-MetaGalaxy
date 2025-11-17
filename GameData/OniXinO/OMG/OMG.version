@@ -1,8 +1,8 @@
 {
   "NAME": "OniXinOMetaGalaxy",
-  "VERSION": { "MAJOR": 0, "MINOR": 0, "PATCH": 0, "BUILD": 2 },
+  "VERSION": { "MAJOR": 0, "MINOR": 0, "PATCH": 0, "BUILD": 3 },
   "KSP_VERSION_MIN": { "MAJOR": 1, "MINOR": 0, "PATCH": 0 },
   "KSP_VERSION_MAX": { "MAJOR": 1, "MINOR": 12, "PATCH": 5 },
-  "URL": "",
-  "DOWNLOAD": ""
+  "URL": "https://github.com/OniXinO/Onyx-MetaGalaxy",
+  "DOWNLOAD": "https://github.com/OniXinO/Onyx-MetaGalaxy/releases"
 }
