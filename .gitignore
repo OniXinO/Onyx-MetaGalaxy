@@ -9,7 +9,7 @@
 *.cache
 
 # Do not commit compiled plugin DLLs
-GameData/OniXinO/OMG/Plugins/*.dll
+# GameData/OniXinO/OMG/Plugins/*.dll
 
 # Keep tools folder (scripts)
 /tools/DeepSeek_conversation.txt
