@@ -14,3 +14,4 @@
 # Keep tools folder (scripts)
 /tools/DeepSeek_conversation.txt
 /.trae
+/GameData/OniXinO/OnyxMetaGalaxy/Plugins/*.dll
