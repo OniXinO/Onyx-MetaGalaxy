@@ -46,3 +46,16 @@
 - Файл `GameData/OniXinO/OMG/OMG.version` (KSP-AVC) містить версію і посилання на релізи.
 - Оновлення: BUILD збільшується при змінах функціональності/документації; великі зміни — PATCH/MINOR/MAJOR.
 - Див. `CHANGELOG.md` для списку змін.
+
+Профілі продуктивності (0.0.1):
+- Рівні: Productivity (низький пріоритет графіки), Balance (середній), Quality (високий), SuperQuality (ультра).
+- У 0.0.1 реалізовано профілі лише для OPM-only: `opm_productivity`, `opm_balance`, `opm_quality`, `opm_superquality`.
+- Рекомендації:
+  - Productivity: мінімум графічних модів, базові налаштування; орієнтація на стабільність і FPS.
+  - Balance: вибіркові графічні ефекти зі стриманими параметрами; компроміс якість/продуктивність.
+- Надалі буде додано параметр `performanceLevel` у `OMGSettings.cfg` і модульні патчі для графіки.
+
+Тестовий реліз 0.0.1:
+- База: Stock + OPM через OMG-обгортку.
+- Дистрибуція: GitHub Releases; з версії `0.1` — підготовка до SpaceDock/CKAN.
+- Ліцензії: код — MIT (`LICENSE`); конфіги/ресурси — MIT або CC BY-NC-SA 4.0 (`LICENSE-CC-BY-NC-SA-4.0.txt`).
