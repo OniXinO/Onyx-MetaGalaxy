@@ -1,109 +1,97 @@
-Param(
-    [string]$ActiveProfile
+# Activate OMG Profile and manage ModuleManager markers
+param(
+  [string]$ActiveProfile,
+  [string]$GameDataPath
 )
 
+Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Get-ActiveProfileName {
-    param([string]$settingsPath)
-    if (-not (Test-Path $settingsPath)) { return 'default' }
-    $lines = Get-Content -LiteralPath $settingsPath
-    foreach ($line in $lines) {
-        if ($line -match 'activeProfile\s*=\s*(\S+)') { return $Matches[1] }
+function Read-Setting {
+  param([string]$file, [string]$key, [string]$default)
+  if (!(Test-Path $file)) { return $default }
+  foreach ($raw in Get-Content -LiteralPath $file) {
+    $t = $raw.Trim()
+    if ($t -like "$key*") {
+      $parts = $t.Split('=')
+      if ($parts.Length -ge 2) { return $parts[1].Trim() }
     }
-    return 'default'
+  }
+  return $default
 }
 
-$root = Split-Path $PSScriptRoot -Parent
-$gameData = Join-Path $root 'GameData'
-$modVendor = Join-Path $gameData 'OniXinO'
-$modRoot = Join-Path $modVendor 'OMG'
-$profilesDir = Join-Path $modRoot 'Profiles'
-$settingsPath = Join-Path $modRoot 'OMGSettings.cfg'
-
-if (-not $ActiveProfile) {
-    $ActiveProfile = Get-ActiveProfileName -settingsPath $settingsPath
+function Read-BoolSetting {
+  param([string]$file, [string]$key, [bool]$default)
+  $val = Read-Setting -file $file -key $key -default ($null)
+  if ($null -eq $val) { return $default }
+  $v = $val.ToLowerInvariant()
+  return ($v -eq 'true' -or $v -eq '1' -or $v -eq 'yes')
 }
 
-if (-not (Test-Path $profilesDir)) {
-    Write-Host "Profiles directory not found: $profilesDir" -ForegroundColor Red
-    exit 1
-}
-
-$profilePath = Join-Path $profilesDir ("{0}.cfg" -f $ActiveProfile)
-if (-not (Test-Path $profilePath)) {
-    Write-Host "Profile '$ActiveProfile' not found: $profilePath" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "Activating profile: $ActiveProfile" -ForegroundColor Cyan
-
-# Parse Packs from profile .cfg
-$packs = @()
-$inPack = $false
-$current = @{ id = $null; enabled = $false }
-
-foreach ($raw in Get-Content -LiteralPath $profilePath) {
+function Parse-Packs {
+  param([string]$profilePath)
+  $result = @()
+  if (!(Test-Path $profilePath)) { return $result }
+  $inPack = $false; $id = $null; $enabled = $false
+  foreach ($raw in Get-Content -LiteralPath $profilePath) {
     $line = $raw.Trim()
-    # Початок блоку Pack (підтримка форматів: "Pack {" та на наступному рядку "{")
-    if (-not $inPack -and ($line -match '^Pack(\s*\{)?$')) {
-        $inPack = $true
-        $current = @{ id = $null; enabled = $false }
-        continue
-    }
-    if ($inPack -and $line -match '^\{\s*$') { continue }
-    if ($inPack -and $line -match '^id\s*=') {
-        $current.id = ($line -replace 'id\s*=\s*','').Trim()
-        continue
-    }
-    if ($inPack -and $line -match '^enabled\s*=') {
-        $val = ($line -replace 'enabled\s*=\s*','').Trim().ToLower()
-        $current.enabled = ($val -in @('true','1','yes'))
-        continue
-    }
-    if ($inPack -and $line -match '^\}\s*$') {
-        if ($current.id) { $packs += [pscustomobject]$current }
-        $inPack = $false
-        $current = @{ id = $null; enabled = $false }
-        continue
-    }
+    if (!$inPack -and ($line -eq 'Pack' -or $line.StartsWith('Pack{'))) { $inPack = $true; $id = $null; $enabled = $false; continue }
+    if ($inPack -and $line -eq '{') { continue }
+    if ($inPack -and $line -like 'id*') { $id = ($line.Split('=')[1]).Trim(); continue }
+    if ($inPack -and $line -like 'enabled*') { $enabled = (($line.Split('=')[1]).Trim().ToLowerInvariant() -in @('true','1','yes')); continue }
+    if ($inPack -and $line -eq '}') { if ($id) { $result += [pscustomobject]@{ id=$id; enabled=$enabled } }; $inPack = $false }
+  }
+  return $result
 }
 
-if ($packs.Count -eq 0) {
-    Write-Host "No packs defined in profile: $profilePath" -ForegroundColor Yellow
+function Ensure-Marker {
+  param([string]$omgRoot, [string]$packId)
+  $markerDir = Join-Path $omgRoot ("OMG_Enable_" + $packId)
+  if (!(Test-Path $markerDir)) { New-Item -ItemType Directory -Path $markerDir | Out-Null }
+  $markerFile = Join-Path $markerDir 'MM_Marker.cfg'
+  $content = @(
+    "OMG:FOR[OMG_Enable_$packId]",
+    "{",
+    "}"
+  )
+  Set-Content -LiteralPath $markerFile -Value $content -Encoding UTF8
 }
+
+function Clean-OldMarkers {
+  param([string]$omgRoot)
+  Get-ChildItem -LiteralPath $omgRoot -Directory -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -like 'OMG_Enable_*' } |
+    ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+}
+
+# Resolve paths
+$repoRoot = Split-Path -Parent $PSScriptRoot
+if (-not $GameDataPath) { $GameDataPath = Join-Path $repoRoot 'GameData' }
+$omgRoot = Join-Path $GameDataPath 'OniXinO\OMG'
+$settingsPath = Join-Path $omgRoot 'OMGSettings.cfg'
+
+if (-not $ActiveProfile -or $ActiveProfile.Trim() -eq '') {
+  $ActiveProfile = Read-Setting -file $settingsPath -key 'activeProfile' -default 'default'
+}
+
+$strictMarkers = Read-BoolSetting -file $settingsPath -key 'strictMarkers' -default $true
+$profilePath = Join-Path $omgRoot ('Profiles\' + $ActiveProfile + '.cfg')
+$packs = Parse-Packs -profilePath $profilePath
+Write-Host "[OMG] ActiveProfile=$ActiveProfile, packs=$($packs.Count), strictMarkers=$strictMarkers"
+
+Clean-OldMarkers -omgRoot $omgRoot
 
 foreach ($p in $packs) {
-    $markerFolderName = "OMG_Enable_$($p.id)"
-    # Нове розташування маркерів у вендорній теці
-    $markerPath = Join-Path $modVendor $markerFolderName
-    # Легасі-шлях (раніше у корені GameData) — при потребі приберемо
-    $legacyMarkerPath = Join-Path $gameData $markerFolderName
-    $packPath = Join-Path $gameData $p.id
-    $packExists = Test-Path $packPath
-    if ($p.enabled -and -not $packExists) {
-        Write-Host "WARNING: Pack '$($p.id)' enabled but not found in GameData ($packPath)" -ForegroundColor Yellow
+  if (-not $p.enabled) { continue }
+  if ($strictMarkers) {
+    $packDir = Join-Path $GameDataPath $p.id
+    if (!(Test-Path $packDir)) {
+      Write-Warning "[OMG] Skipping marker for '$($p.id)' — pack folder not found (strict mode)."
+      continue
     }
-    if ($p.enabled) {
-        if (-not (Test-Path $markerPath)) { New-Item -ItemType Directory -Path $markerPath | Out-Null }
-        $mmPatchPath = Join-Path $markerPath 'MM_Marker.cfg'
-        $modName = $markerFolderName
-        $content = "@OMG:FOR[$modName]`n{`n    // Marker for ModuleManager :NEEDS[$modName]`n}"
-        Set-Content -LiteralPath $mmPatchPath -Value $content -Encoding UTF8
-        Write-Host "Enabled marker: $markerFolderName" -ForegroundColor Green
-        # Приберемо легасі-маркер у корені, щоб уникнути дублювань
-        if ((Test-Path $legacyMarkerPath) -and ($legacyMarkerPath -ne $markerPath)) {
-            Remove-Item -Recurse -Force -LiteralPath $legacyMarkerPath
-            Write-Host "Removed legacy marker: $legacyMarkerPath" -ForegroundColor Yellow
-        }
-    } else {
-        foreach ($path in @($markerPath, $legacyMarkerPath)) {
-            if (Test-Path $path) {
-                Remove-Item -Recurse -Force -LiteralPath $path
-                Write-Host "Removed marker: $path" -ForegroundColor Yellow
-            }
-        }
-    }
+  }
+  Ensure-Marker -omgRoot $omgRoot -packId $p.id
+  Write-Host "[OMG] Marker created: OMG_Enable_$($p.id)"
 }
 
-Write-Host "Activation complete. Launch KSP to apply '$ActiveProfile'." -ForegroundColor Cyan
+Write-Host '[OMG] Done.'

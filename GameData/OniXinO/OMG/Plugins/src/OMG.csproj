@@ -1,10 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyName>OMG</AssemblyName>
+    <AssemblyName>OnyxMG</AssemblyName>
     <RootNamespace>OMG</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\</OutputPath>
+    <Version>0.0.1</Version>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <InformationalVersion>0.0.1</InformationalVersion>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- Ensure .NET Framework 4.7.2 reference assemblies are available on build machines -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(KSP_DIR)\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
@@ -12,14 +23,16 @@
     <Reference Include="UnityEngine">
       <HintPath>$(KSP_DIR)\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(KSP_DIR)\KSP_x64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
     <Reference Include="KSPUtil">
       <HintPath>$(KSP_DIR)\KSP_x64_Data\Managed\KSPUtil.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="OMGProfileManager.cs" />
-  </ItemGroup>
+  <Target Name="CopyToKspGameData" AfterTargets="Build" Condition="'$(KSP_DIR)' != ''">
+    <PropertyGroup>
+      <KspPluginDir>$(KSP_DIR)\GameData\OniXinO\OMG\Plugins</KspPluginDir>
+      <DestDll>$(KspPluginDir)\$(AssemblyName).dll</DestDll>
+    </PropertyGroup>
+    <MakeDir Directories="$(KspPluginDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(DestDll)" />
+  </Target>
 </Project>
