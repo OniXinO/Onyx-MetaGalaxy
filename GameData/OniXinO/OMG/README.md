@@ -27,8 +27,8 @@
 Приклад ModuleManager патча для інтеграції:
 
 ```
-// Спрацює лише якщо пак OPM увімкнений у профілі (маркер існує)
-@Kopernicus:NEEDS[OuterPlanetsMod,OMG_Enable_OuterPlanetsMod]
+// Спрацює лише якщо пак OPM увімкнений у профілі (папка паку існує)
+@Kopernicus:NEEDS[OuterPlanetsMod]
 {
   // Інтеграційний конфіг (ресурси/баланс/налаштування)
 }

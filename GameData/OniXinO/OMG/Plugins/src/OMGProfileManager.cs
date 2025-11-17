@@ -21,7 +21,7 @@ namespace OMG
             try
             {
                 GameDataPath = Path.Combine(KSPUtil.ApplicationRootPath, "GameData");
-                OMGRoot = Path.Combine(GameDataPath, "OniXinO", "OMG");
+                OMGRoot = Path.Combine(GameDataPath, "OnyxMetaGalaxy");
                 SettingsPath = Path.Combine(OMGRoot, "OMGSettings.cfg");
 
                 var activeProfile = ReadActiveProfileName(SettingsPath) ?? "default";

@@ -29,7 +29,7 @@
   </ItemGroup>
   <Target Name="CopyToKspGameData" AfterTargets="Build" Condition="'$(KSP_DIR)' != ''">
     <PropertyGroup>
-      <KspPluginDir>$(KSP_DIR)\GameData\OniXinO\OMG\Plugins</KspPluginDir>
+      <KspPluginDir>$(KSP_DIR)\GameData\OnyxMetaGalaxy\Plugins</KspPluginDir>
       <DestDll>$(KspPluginDir)\$(AssemblyName).dll</DestDll>
     </PropertyGroup>
     <MakeDir Directories="$(KspPluginDir)" />
