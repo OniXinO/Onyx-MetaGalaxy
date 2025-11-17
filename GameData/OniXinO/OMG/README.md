@@ -5,7 +5,7 @@
 Структура:
 - `GameData/OniXinO/OMG/OMGSettings.cfg` — вибір активного профілю.
 - `GameData/OniXinO/OMG/Profiles/*.cfg` — профілі зі списком `Pack { id; enabled }`.
-- Маркери: `GameData/OMG_Enable_<PackId>` — створюються скриптом.
+- Маркери: `GameData/OniXinO/OMG_Enable_<PackId>` — створюються скриптом.
 
 Залежності:
 - Встановлені планетпаки у `GameData` (наприклад `OuterPlanetsMod`, `JNSQ` тощо).
@@ -16,7 +16,7 @@
 2. Відредагуйте `Profiles/default.cfg`, увімкніть/вимкніть `enabled`.
 3. За потреби змініть активний профіль у `OMGSettings.cfg` (`activeProfile = default`).
 4. Запустіть `tools/ActivateProfile.ps1` (опційно `-ActiveProfile <name>`).
-5. Скрипт створить/прибере маркери `GameData/OMG_Enable_<id>`, їх можна перевірити у файловій системі.
+5. Скрипт створить/прибере маркери `GameData/OniXinO/OMG_Enable_<id>`, їх можна перевірити у файловій системі.
 6. Запускайте KSP.
 
 Приклад ModuleManager патча для інтеграції:

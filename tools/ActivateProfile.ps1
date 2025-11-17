@@ -75,7 +75,15 @@ if ($packs.Count -eq 0) {
 
 foreach ($p in $packs) {
     $markerFolderName = "OMG_Enable_$($p.id)"
-    $markerPath = Join-Path $gameData $markerFolderName
+    # Нове розташування маркерів у вендорній теці
+    $markerPath = Join-Path $modVendor $markerFolderName
+    # Легасі-шлях (раніше у корені GameData) — при потребі приберемо
+    $legacyMarkerPath = Join-Path $gameData $markerFolderName
+    $packPath = Join-Path $gameData $p.id
+    $packExists = Test-Path $packPath
+    if ($p.enabled -and -not $packExists) {
+        Write-Host "WARNING: Pack '$($p.id)' enabled but not found in GameData ($packPath)" -ForegroundColor Yellow
+    }
     if ($p.enabled) {
         if (-not (Test-Path $markerPath)) { New-Item -ItemType Directory -Path $markerPath | Out-Null }
         $mmPatchPath = Join-Path $markerPath 'MM_Marker.cfg'
@@ -83,10 +91,17 @@ foreach ($p in $packs) {
         $content = "@OMG:FOR[$modName]`n{`n    // Marker for ModuleManager :NEEDS[$modName]`n}"
         Set-Content -LiteralPath $mmPatchPath -Value $content -Encoding UTF8
         Write-Host "Enabled marker: $markerFolderName" -ForegroundColor Green
+        # Приберемо легасі-маркер у корені, щоб уникнути дублювань
+        if ((Test-Path $legacyMarkerPath) -and ($legacyMarkerPath -ne $markerPath)) {
+            Remove-Item -Recurse -Force -LiteralPath $legacyMarkerPath
+            Write-Host "Removed legacy marker: $legacyMarkerPath" -ForegroundColor Yellow
+        }
     } else {
-        if (Test-Path $markerPath) {
-            Remove-Item -Recurse -Force -LiteralPath $markerPath
-            Write-Host "Removed marker: $markerFolderName" -ForegroundColor Yellow
+        foreach ($path in @($markerPath, $legacyMarkerPath)) {
+            if (Test-Path $path) {
+                Remove-Item -Recurse -Force -LiteralPath $path
+                Write-Host "Removed marker: $path" -ForegroundColor Yellow
+            }
         }
     }
 }
