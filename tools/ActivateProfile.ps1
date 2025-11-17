@@ -14,6 +14,19 @@ function Get-ActiveProfileName {
     return 'default'
 }
 
+function Get-StrictMode {
+    param([string]$settingsPath)
+    if (-not (Test-Path $settingsPath)) { return $true }
+    $lines = Get-Content -LiteralPath $settingsPath
+    foreach ($line in $lines) {
+        if ($line -match 'strictMarkers\s*=\s*(\S+)') {
+            $val = $Matches[1].ToLower()
+            return ($val -in @('true','1','yes'))
+        }
+    }
+    return $true
+}
+
 $root = Split-Path $PSScriptRoot -Parent
 $gameData = Join-Path $root 'GameData'
 $modVendor = Join-Path $gameData 'OniXinO'
@@ -24,6 +37,7 @@ $settingsPath = Join-Path $modRoot 'OMGSettings.cfg'
 if (-not $ActiveProfile) {
     $ActiveProfile = Get-ActiveProfileName -settingsPath $settingsPath
 }
+$strict = Get-StrictMode -settingsPath $settingsPath
 
 if (-not (Test-Path $profilesDir)) {
     Write-Host "Profiles directory not found: $profilesDir" -ForegroundColor Red
@@ -83,6 +97,10 @@ foreach ($p in $packs) {
     $packExists = Test-Path $packPath
     if ($p.enabled -and -not $packExists) {
         Write-Host "WARNING: Pack '$($p.id)' enabled but not found in GameData ($packPath)" -ForegroundColor Yellow
+        if ($strict) {
+            Write-Host "Strict mode active: skipping marker for '$($p.id)'" -ForegroundColor Yellow
+            continue
+        }
     }
     if ($p.enabled) {
         if (-not (Test-Path $markerPath)) { New-Item -ItemType Directory -Path $markerPath | Out-Null }

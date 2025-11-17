@@ -26,8 +26,8 @@ namespace OMG
                 var packs = ReadPacks(profilePath);
                 Log($"OMG active profile: {activeProfile} ({packs.Count} packs)");
 
-                // TODO: Підписатися на події GameDatabase, щоб фільтрувати ConfigNode
-                // GameEvents.OnGameDatabaseLoaded.Add(OnDatabaseLoaded);
+                // Підписка: після завантаження БД логувати (і згодом фільтрувати) ноди вимкнених паків
+                GameEvents.OnGameDatabaseLoaded.Add(() => OnDatabaseLoaded(packs));
             }
             catch (Exception ex)
             {
@@ -81,14 +81,38 @@ namespace OMG
             return s == "true" || s == "1" || s == "yes";
         }
 
-        // Приклад гака: фільтрувати ноди для вимкнених паків (псевдологіка)
-        // private void OnDatabaseLoaded()
-        // {
-        //     var disabledPacks = ...;
-        //     foreach (var node in GameDatabase.Instance.root.AllConfigs)
-        //     {
-        //         // Якщо node належить до каталогу паку X і X вимкнений — виключити його
-        //     }
-        // }
+        // Логування нод для вимкнених паків (м'яка перевірка)
+        private void OnDatabaseLoaded(List<(string id, bool enabled)> packs)
+        {
+            try
+            {
+                var disabled = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                foreach (var p in packs) if (!p.enabled) disabled.Add(p.id ?? string.Empty);
+                Log($"OMG DB loaded. Disabled packs: {string.Join(",", disabled)}");
+
+                // GameDatabase зберігає відносний шлях у властивості url (тип UrlConfig/ConfigNode)
+                // Тут ми лише логуватимемо кандидатів, щоб уникнути небажаного видалення.
+                var configs = GameDatabase.Instance.root; // кореневий вузол
+                if (configs != null)
+                {
+                    foreach (var node in configs.nodes)
+                    {
+                        // Багато нод не мають прив'язки до файлового шляху, це лише демо-логіка
+                        var src = node.name; // для демонстрації, реальний шлях потребує UrlDir/UrlConfig
+                        foreach (var id in disabled)
+                        {
+                            if (src != null && src.StartsWith(id, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                Log($"Candidate node from disabled pack '{id}': {src}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("OMG OnDatabaseLoaded failed: " + ex);
+            }
+        }
     }
 }
